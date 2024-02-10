@@ -1,0 +1,113 @@
+[tool.poetry]
+name = "JobJourney"
+version = "0.1.0"
+description = "Job Applications & Leads management"
+authors = ["borland667"]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/ArgDevs/JobJourney"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+# Django
+django = "^5.0.2"
+djangorestframework = "^3.14.0"
+django-extensions = "^3.2.3"
+django-environ = "^0.11.2"
+factory-boy = "^3.3.0"
+gunicorn = "^21.2.0"
+uvicorn = "^0.27.1"
+djangorestframework-simplejwt = "^5.3.1"
+django-health-check = "^3.18.1"
+kombu = "^5.3.5"
+django-debug-toolbar = "^4.3.0"
+celery = "^5.3.6"
+psycopg2 = "^2.9.9"
+psutil = "^5.9.8"
+redis = "^5.0.1"
+whitenoise = "^6.6.0"
+
+
+[tool.poetry.group.dev.dependencies]
+
+# Tests
+pytest = "^8.0.0"
+pytest-xdist = ">=3.5.0"
+pytest-cov = "^4.1.0"
+pytest-django = "^4.8.0"
+pytest-randomly = "^3.15.0"
+django-pytest = "^0.2.0"
+freezegun = "^1.4.0"
+
+# Linting
+mypy = "^1.8.0"
+gitlint = "^0.19.1"
+flake8 = "^7.0.0"
+flake8-isort = "^6.1.1"
+flake8-gl-codeclimate = "^0.2.1"
+isort = "^5.13.2"
+
+
+[tool.isort]
+profile = "wemake"
+src_paths = ["src"]
+line_length = 120
+
+[tool.pytest.ini_options]
+minversion = "7.2"
+addopts = "--cov src --junitxml=pytest-report.xml --cov-report=html --cov-report=xml --cov-branch --cov-fail-under=0"
+testpaths = ["src"]
+python_files = [
+  "tests.py",
+  "test_*.py",
+  "*_tests.py",
+]
+
+filterwarnings = [
+  'ignore:SelectableGroups dict interface is deprecated. Use select.',
+  'ignore:The USE_L10N setting is deprecated*',
+]
+
+# pytest-django
+DJANGO_SETTINGS_MODULE = "job_journey.settings"
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+  # Have to re-enable the standard pragma:
+  "pragma: no cover",
+
+  # Don't complain if tests don't hit defensive assertion code:
+  "raise NotImplementedError",
+
+  # Don't complain if non-runnable code isn't run:
+  "if __name__ == .__main__.:",
+]
+
+[tool.mypy]
+python_version = "3.12"
+disable_error_code = ["no-any-return"]
+
+ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = false
+pretty = true
+explicit_package_bases = true
+
+exclude = [
+  "venv",
+  ".venv",
+  "static",
+  "scripts",
+  "migrations",
+]
+
+junit_xml = ".reports/static_check_report.xml"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

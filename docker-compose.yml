@@ -1,0 +1,117 @@
+version: "3.8"
+
+services:
+  # Django Application
+  api:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file:
+      - backend/src/.env-compose
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  celery_beat_scheduler:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file:
+      - backend/src/.env-compose
+    environment:
+      CONTAINER_TYPE: 'celery_beat'
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      api:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  celery_worker_default:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file:
+      - backend/src/.env-compose
+    environment:
+      CONTAINER_TYPE: 'celery_worker_default'
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      api:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  db:
+    image: postgres:16.1
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: "password"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./backend/scripts/postgres_init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U job_journey -d job_journey_local'" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: "job_journey"
+      RABBITMQ_DEFAULT_PASS: "password"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./config/rabbitmq-mgmt.conf:/etc/rabbitmq/conf.d/mgmt.conf
+
+  flower:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    ports:
+      - "5555:5555"
+    env_file:
+      - backend/src/.env-compose
+    environment:
+      CONTAINER_TYPE: 'celery_flower'
+      CELERY_FLOWER_BROKER_API: 'http://job_journey:password@rabbitmq:15672/api/'
+      FLOWER_STATE_SAVE_INTERVAL: 10000
+      FLOWER_DB: "/etc/db/flower.db"
+    depends_on:
+      - redis
+      - rabbitmq
+    volumes:
+      - flower_data:/etc/db/
+
+  redis_ui:
+    image: marian/rebrow
+    hostname: redis_ui
+    ports:
+      - "5001:5001"
+
+volumes:
+  pgdata:
+  rabbitmq_data:
+  flower_data:
