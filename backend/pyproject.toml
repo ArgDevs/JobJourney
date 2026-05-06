@@ -32,7 +32,7 @@ whitenoise = "^6.6.0"
 [tool.poetry.group.dev.dependencies]
 
 # Tests
-pytest = "^8.0.0"
+pytest = ">=8,<10"
 pytest-xdist = ">=3.5.0"
 pytest-cov = "^4.1.0"
 pytest-django = "^4.8.0"
